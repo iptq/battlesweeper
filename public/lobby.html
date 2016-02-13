@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>Lobby</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js" integrity="sha384-RSXe9j39thYJayrqYBX6YfS7IV4bsKWZ9eEMYN+CLnB5pUyGAlXbUG/zWLqB62Na" crossorigin="anonymous"></script>
+		<script src="https://cdn.socket.io/socket.io-1.4.5.js" integrity="sha384-mp5QqlF7YJplkggFgto52+zx2bKkCQPFNvJWia1rhnEpwcXieUOcgRoLncV3M4NO" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<div id="lobby">
+			<h2>Users</h2>
+			<span id="usercount"></span>
+			<ul id="users"></ul>
+			<h2>Challenges</h2>
+			<a href="javascript:create_challenge();" id="challenge_button">Create Challenge</a>
+			<ul id="challenges"></ul>
+		</div>
+		<div id="board" style="display:none;">
+			<h2>Play</h2>
+		</div>
+		<script type="text/javascript">
+			var socket = io();
+			var username;
+			socket.emit("lobby/join", {}, function(error, message) {
+				username = message;
+				socket.on("lobby/users", function(users) {
+					var userlist = document.getElementById("users");
+					userlist.innerHTML = "";
+					for(var i=0; i<users.length; i++) {
+						var user = users[i];
+						var userElement = document.createElement("li");
+						userElement.innerHTML = user["username"];
+						if (user["username"] == username) userElement.style.fontWeight = "bold";
+						if (user["in_game"] == true) userElement.style.fontStyle = "italic";
+						if (user["username"] == username && user["in_game"] == true) start_game();
+						userlist.appendChild(userElement);
+					}
+					document.getElementById("usercount").innerHTML = users.length + " user" + ((users.length != 1) ? "s" : "");
+				});
+				socket.on("lobby/challenges", function(challenges) {
+					var challengelist = document.getElementById("challenges");
+					challengelist.innerHTML = "";
+					for(var i=0; i<challenges.length; i++) {
+						var challenge = challenges[i];
+						var challengeElement = document.createElement("li");
+						if (challenge["sender"] == username) {
+							challengeElement.innerHTML = challenge["sender"];
+						} else {
+							var challengeLink = document.createElement("a");
+							challengeLink.innerHTML = challenge["sender"];
+							challengeLink.href = "javascript:accept_challenge('" + challenge["sender"] + "');";
+							challengeElement.appendChild(challengeLink);
+						}
+						challengelist.appendChild(challengeElement);
+					}
+				});
+				window.create_challenge = function() {
+					socket.emit("lobby/challenge", {}, function(error, message) {
+						// console.log("Created challenge!");
+					});
+				};
+				window.accept_challenge = function(sender) {
+					socket.emit("lobby/accept", { "sender": sender }, function(error, message) {
+						start_game();
+					});
+				};
+				window.start_game = function() {
+					$("#lobby").hide();
+					$("#board").show();
+				};
+			});
+		</script>
+	</body>
+</html>
