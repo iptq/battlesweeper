@@ -123,7 +123,7 @@
 				window.set_board = function(board) {
 					var toHtml = function(n) {
 						switch (n) {
-							case -2:
+							/*case -2:
 								return "<span class='flag'>&#x2691;</a>";
 							case -1:
 								return "<span class='covered'>&#x2588;</a>";
@@ -132,11 +132,21 @@
 							case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
 								return "<span class='number num" + n + "'>" + n + "</span>";
 							default:
+								break;*/
+							case -2:
+								return "<img src='img/flag-mine.png' />";
+							case -1:
+								return "<img src='img/covered.png' />";
+							case 0:
+								return "<img src='img/empty.png' />";
+							case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
+								return "<img src='img/number-" + n + ".png' />";
+							default:
 								break;
 						}
 					};
 					var width = game["width"], height = game["height"];
-					var html = "<table border=1>";
+					var html = "<table border=0 cellspacing=0 cellpadding=0>";
 					for(var j=0; j<height; j++) {
 						html += "<tr>";
 						for(var i=0; i<width; i++) {
@@ -144,14 +154,27 @@
 							html += "<td>";
 							html += "<a class='cell' href='javascript:click_square(" + k + ");' id='cell" + k + "'>" + toHtml(board[k]) + "</a>";
 							html += "</td>";
-							document.getElementById("#cell" + k).oncontextmenu = function(e) {
-								
-							};
 						}
 						html += "</tr>";
 					}
 					html += "</table>";
 					$("#actual_board").html(html);
+					for(var j=0; j<height; j++) {
+						for(var i=0; i<width; i++) {
+							var k = j*height + i;
+							(function(i, j, k) {
+								document.getElementById("cell" + k).oncontextmenu = function(e) {
+									e.preventDefault();
+									console.log(i + ", " + j);
+									if (time >= 0) {
+										console.log(game.flag(j, i));
+										set_board(game.getBoard());
+									}
+									return false;
+								}
+							})(i, j, k);
+						}
+					}
 				};
 				window.click_square = function(k) {
 					var i = k % game["height"];
@@ -163,6 +186,10 @@
 							game.chord(j, i);
 						}
 						set_board(game.getBoard());
+						game_state = game.getState();
+						if (game_state == 2 || game_state == 3) {
+							game_over();
+						}
 					}
 				};
 				window.flag_square = function(k) {
@@ -173,6 +200,20 @@
 					$("#mines").html(mines);
 					set_board(game.getBoard());
 					return false;
+				};
+				window.game_over = function() {
+					var status = game.getState();
+					var cb = function(error, message) {
+						
+					};
+					var data = {
+						gid: gid
+					};
+					if (game.getState() == Minsweeper.DIED) {
+						socket.emit("game/lose", data, cb);
+					} else if (game.getState() == Minsweeper.COMPLETED) {
+						socket.emit("game/win", data, cb);
+					}
 				};
 				window.frame = function() {
 					time = ~~(new Date().getTime() / 1000.0) - startTime;
@@ -198,7 +239,8 @@
 						gid = data["gid"];
 						if (data["player1"] == username) player = "player1";
 						else if (data["player2"] == username) player = "player2";
-						game = new Minsweeper(15, 15, 60, parseInt(data["gid"].toLowerCase(), 36));
+						console.log(parseInt(data["gid"].toLowerCase(), 36) % 15700);
+						game = new Minsweeper(15, 15, 20, parseInt(data["gid"].toLowerCase(), 36));
 						var mines = game["mines"];
 						$("#mines, #opp_mines").html(mines);
 						$("#time, #opp_time").html(0);

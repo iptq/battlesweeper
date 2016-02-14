@@ -91,6 +91,10 @@ io.on("connection", function(socket) {
 		};
 		io.to(data["gid"]).emit("game/update", obj2);
 	});
+	socket.on("game/on", function(data) {
+		var gid = data["gid"];
+		var gameIndex = _.findIndex(games, query);
+	});
 	socket.on("disconnect", function() {
 		_.pullAllBy(users, [{ "username": username }], "username");
 		io.emit("lobby/users", get_users());

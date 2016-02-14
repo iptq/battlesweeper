@@ -93,6 +93,10 @@ Minsweeper.prototype.open = function(r, c) {
 */
 Minsweeper.prototype.chord = function(r, c) {
     var result = this.board.chord(r, c);
+    if (this.board.isCompleted()) {
+        this.endTime = Date.now();
+        this.state = Minsweeper.COMPLETED;
+    }
     return result;
 }
 
@@ -229,6 +233,10 @@ Minsweeper.Board.SURROUNDING = [
     [ 0, -1 ], [ 0, 1 ],
     [ 1, -1 ], [ 1, 0 ], [ 1, 1 ]
 ];
+Minsweeper.Board.SURROUNDING_CARDINAL = [
+    [ -1, 0 ], [ 0, -1 ], [ 0, 1 ],
+    [ 1, 0 ]
+];
 Minsweeper.Board.ALREADYOPENED = 10;
 Minsweeper.Board.FLAGGED = 11;
 Minsweeper.Board.UNFLAGGED = 12;
@@ -273,7 +281,44 @@ Minsweeper.Board.prototype.open = function(r, c) {
             return Minsweeper.Board.FLAGGED;
         }
         if (this.grid[offset] == -1) {
-            return Minsweeper.Board.MINE;
+            if (this.opened > 0) {
+                return Minsweeper.Board.MINE;
+            } else {
+                var ALL = Minsweeper.Board.SURROUNDING;
+                ALL.push([0, 0]);
+                ALL.forEach(function(coord) {
+                    var found = false, q = ~~(Math.random() * (instance.width * instance.height));
+                    while (!found) {
+                        if (q == offset) continue;
+                        if (instance.grid[q] != -1) {
+                            found = true;
+                        } else {
+                            q = ~~(Math.random() * (instance.width * instance.height));
+                        }
+                    }
+                    instance.grid[offset] = 0;
+                    instance.grid[q] = -1;
+                });
+                for (var r = 0; r < instance.height; r++) {
+                    for (var c = 0; c < instance.width; c++) {
+                        var offset = instance.c2o(r, c);
+                        if (instance.grid[offset] == 0) {
+                            // Count mines
+                            var count = 0;
+                            Minsweeper.Board.SURROUNDING.forEach(function(coord) {
+                                var nr = r + coord[0];
+                                var nc = c + coord[1];
+                                var no = instance.c2o(nr, nc);
+                                if (instance.inBounds(nr, nc) && instance.grid[no] < 0) {
+                                    count++;
+                                }
+                            });
+                            
+                            instance.grid[offset] = count;
+                        }
+                    }
+                }
+            }
         }
         
         if (this.grid[offset] == 0) {
@@ -281,20 +326,28 @@ Minsweeper.Board.prototype.open = function(r, c) {
             while (openstack.length > 0) {
                 var coords = openstack.pop();
                 var offset = this.c2o(coords[0], coords[1]);
+                if (this.status[offset] == 1) {
+                    continue;
+                }
                 this.status[offset] = 1;
                 this.visible[offset] = this.grid[offset];
                 this.opened++;
                 
+                var select;
                 if (this.grid[offset] == 0) {
-                    Minsweeper.Board.SURROUNDING.forEach(function(coord) {
-                        var nr = coords[0] + coord[0];
-                        var nc = coords[1] + coord[1];
-                        var no = instance.c2o(nr, nc);
-                        if (instance.inBounds(nr, nc) && instance.status[no] == 0) {
-                            openstack.push([ nr, nc ]);
-                        }
-                    });
+                    select = Minsweeper.Board.SURROUNDING;
+                } else if (this.grid[offset] > 0 && this.grid[offset] <= 8) {
+                    select = []; // Minsweeper.Board.SURROUNDING_CARDINAL;
                 }
+                select.forEach(function(coord) {
+                    var nr = coords[0] + coord[0];
+                    var nc = coords[1] + coord[1];
+                    var no = instance.c2o(nr, nc);
+                    console.log(instance.grid[no]);
+                    if (instance.inBounds(nr, nc) && instance.grid[no] >= 0 && instance.grid[no] <= 8) {
+                        openstack.push([ nr, nc ]);
+                    }
+                });
             }
         }
         else {
