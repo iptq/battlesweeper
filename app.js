@@ -36,6 +36,13 @@ io.on("connection", function(socket) {
 		"open_challenge": false,
 		"socket_id": socket.id
 	});
+	socket.on("lobby/message", function(data, callback) {
+		var sender = username;
+		var message = data["message"];
+		var timestamp = ~~(moment().format("x"));
+		io.emit("lobby/message", { sender: sender, message: message, timestamp: timestamp });
+		callback();
+	});
 	socket.on("lobby/join", function(data, callback) {
 		callback(null, username);
 		io.emit("lobby/users", get_users());
@@ -57,7 +64,8 @@ io.on("connection", function(socket) {
 			"player1": username,
 			"player2": data["sender"],
 			"player1data": {},
-			"player2data": {}
+			"player2data": {},
+			"winner": -1
 		};
 		games.push(obj);
 		users[index]["open_challenge"] = false;
@@ -91,10 +99,24 @@ io.on("connection", function(socket) {
 		};
 		io.to(data["gid"]).emit("game/update", obj2);
 	});
-	socket.on("game/on", function(data) {
+	var cb = function(data) {
 		var gid = data["gid"];
-		var gameIndex = _.findIndex(games, query);
-	});
+		var gameIndex = _.findIndex(games, { "gid": gid });
+		var win = data["result"] == 1;
+		games[gameIndex]["winner"] = parseInt(data["player"].replace("player", ""));
+		var index = _.findIndex(users, { "username": games[gameIndex]["player1"] });
+		var senderIndex = _.findIndex(users, { "username": games[gameIndex]["player2"] });
+		users[index]["in_game"] = false;
+		users[senderIndex]["in_game"] = false;
+		io.to(gid).emit("game/over", {
+			winner: win ? games[gameIndex][data["player"]] : games[gameIndex][data["player"] == "player1" ? "player2" : "player1"],
+			duration: ~~(moment().format("X")) - games[gameIndex]["start_time"]
+		});
+		io.emit("lobby/users", get_users());
+		io.emit("lobby/challenges", get_challenges());
+	};
+	socket.on("game/win", cb);
+	socket.on("game/lose", cb);
 	socket.on("disconnect", function() {
 		_.pullAllBy(users, [{ "username": username }], "username");
 		io.emit("lobby/users", get_users());
