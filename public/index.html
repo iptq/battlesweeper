@@ -1,51 +1,218 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-<title>Battle Sweeper</title>
-<meta charset="iso-8859-1">
-<link rel="stylesheet" href="styles/layout.css" type="text/css">
-</head>
-<body>
-<div class="wrapper row1">
-  <header id="header" class="clear">
-    <div id="hgroup">
-      <h1><a href="#">Battle Sweeper</a></h1>
-    </div>
-  </header>
-</div>
-<!-- content -->
-<div class="wrapper row2">
-  <div id="container" class="clear">
-    <!-- Slider -->
-    <section id="slider"><a href="#"><img src="images/960x360.gif" alt=""></a></section>
-    <!-- main content -->
-    <div id="homepage">
-      <!-- Services -->
-      <section id="services" class="clear">
-        <article class="one_third">
-          <figure><img src="images/290x180.gif" width="290" height="180" alt="">
-          </figure>
-        </article>
-        <article class="one_third">
-          <figure><img src="images/290x180.gif" width="290" height="180" alt="">
-          </figure>
-        </article>
-        <article class="one_third lastbox">
-          <figure><img src="images/290x180.gif" width="290" height="180" alt="">
-          </figure>
-        </article>
-      </section>
-      <!-- / Services -->
-      <!-- ########################################################################################## -->
-      <!-- ########################################################################################## -->
-      <!-- ########################################################################################## -->
-      <!-- ########################################################################################## -->
-    </div>
-    <!-- / content body -->
-  </div>
-</div>
-    <!-- / Section -->
-  </div>
-</div>
-</body>
+<html>
+	<head>
+		<title>Lobby</title>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js" integrity="sha384-RSXe9j39thYJayrqYBX6YfS7IV4bsKWZ9eEMYN+CLnB5pUyGAlXbUG/zWLqB62Na" crossorigin="anonymous"></script>
+		<script src="https://cdn.socket.io/socket.io-1.4.5.js" integrity="sha384-mp5QqlF7YJplkggFgto52+zx2bKkCQPFNvJWia1rhnEpwcXieUOcgRoLncV3M4NO" crossorigin="anonymous"></script>
+		<script src="Minsweeper.js"></script>
+		<style>
+			.cell {
+				text-decoration: none;
+				font-family: monospace;
+				font-size: 14pt;
+			}
+			.flag {
+				color: #900;
+			}
+			.covered {
+				color: #CCC;
+			}
+			.blank {
+				color: #999;
+			}
+			.number {
+				font-weight: bold;
+			}
+			.num1 {
+				color: #009;
+			}
+			.num2 {
+				color: #090;
+			}
+			.num3 {
+				color: #900;
+			}
+			.num4 {
+				color: #003;
+			}
+			.num5 {
+				color: #300;
+			}
+			.num6 {
+				color: #066;
+			}
+			.num7 {
+				color: #000;
+			}
+			.num8 {
+				color: #999;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="lobby">
+			<h2>Users</h2>
+			<span id="usercount"></span>
+			<ul id="users"></ul>
+			<h2>Challenges</h2>
+			<a href="javascript:create_challenge();" id="challenge_button">Create Challenge</a>
+			<ul id="challenges"></ul>
+		</div>
+		<div id="board" style="display:none;">
+			<h2>Play</h2>
+			<div id="toolbar">
+				Mines: <span id="mines"></span>
+				Time: <span id="time"></span>
+				<div style="float:right;">
+					(Opponent)
+					Mines: <span id="opp_mines"></span>
+					Time: <span id="opp_time"></span>
+				</div>
+			</div>
+			<center>
+				<div id="actual_board" style="display:inline-block;"></div>
+			</center>
+		</div>
+		<script type="text/javascript">
+			var socket = io();
+			var username, player, gid;
+			var time, startTime, prevTime = 0, mines;
+			var game;
+			socket.emit("lobby/join", {}, function(error, message) {
+				username = message;
+				socket.on("lobby/users", function(users) {
+					var userlist = document.getElementById("users");
+					userlist.innerHTML = "";
+					for(var i=0; i<users.length; i++) {
+						var user = users[i];
+						var userElement = document.createElement("li");
+						userElement.innerHTML = user["username"];
+						if (user["username"] == username) userElement.style.fontWeight = "bold";
+						if (user["in_game"] == true) userElement.style.fontStyle = "italic";
+						if (user["username"] == username && user["in_game"] == true) start_game();
+						userlist.appendChild(userElement);
+					}
+					document.getElementById("usercount").innerHTML = users.length + " user" + ((users.length != 1) ? "s" : "");
+				});
+				socket.on("lobby/challenges", function(challenges) {
+					var challengelist = document.getElementById("challenges");
+					challengelist.innerHTML = "";
+					for(var i=0; i<challenges.length; i++) {
+						var challenge = challenges[i];
+						var challengeElement = document.createElement("li");
+						if (challenge["sender"] == username) {
+							challengeElement.innerHTML = challenge["sender"];
+						} else {
+							var challengeLink = document.createElement("a");
+							challengeLink.innerHTML = challenge["sender"];
+							challengeLink.href = "javascript:accept_challenge('" + challenge["sender"] + "');";
+							challengeElement.appendChild(challengeLink);
+						}
+						challengelist.appendChild(challengeElement);
+					}
+				});
+				window.create_challenge = function() {
+					socket.emit("lobby/challenge", {}, function(error, message) {
+						// console.log("Created challenge!");
+					});
+				};
+				window.accept_challenge = function(sender) {
+					socket.emit("lobby/accept", { "sender": sender }, function(error, message) {
+						start_game();
+					});
+				};
+				window.set_board = function(board) {
+					var toHtml = function(n) {
+						switch (n) {
+							case -2:
+								return "<span class='flag'>&#x2691;</a>";
+							case -1:
+								return "<span class='covered'>&#x2588;</a>";
+							case 0:
+								return "<span class='blank'>&#x2588;</a>";
+							case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
+								return "<span class='number num" + n + "'>" + n + "</span>";
+							default:
+								break;
+						}
+					};
+					var width = game["width"], height = game["height"];
+					var html = "<table border=1>";
+					for(var j=0; j<height; j++) {
+						html += "<tr>";
+						for(var i=0; i<width; i++) {
+							var k = j*height + i;
+							html += "<td>";
+							html += "<a class='cell' href='javascript:click_square(" + k + ");' id='cell" + k + "'>" + toHtml(board[k]) + "</a>";
+							html += "</td>";
+							document.getElementById("#cell" + k).oncontextmenu = function(e) {
+								
+							};
+						}
+						html += "</tr>";
+					}
+					html += "</table>";
+					$("#actual_board").html(html);
+				};
+				window.click_square = function(k) {
+					var i = k % game["height"];
+					var j = ~~(k / game["height"]);
+					if (time >= 0) {
+						if (game.getBoard()[k] == -1) {
+							game.open(j, i);
+						} else {
+							game.chord(j, i);
+						}
+						set_board(game.getBoard());
+					}
+				};
+				window.flag_square = function(k) {
+					var i = k % game["height"];
+					var j = ~~(k / game["height"]);
+					game.flag(j, i);
+					mines = game.mines - game.board.flagged;
+					$("#mines").html(mines);
+					set_board(game.getBoard());
+					return false;
+				};
+				window.frame = function() {
+					time = ~~(new Date().getTime() / 1000.0) - startTime;
+					$("#time").html(time);
+					if (time != prevTime) {
+						socket.emit("game/update", {
+							gid: gid,
+							from: username,
+							player: player,
+							mines: mines,
+							time: time
+						});
+					}
+					prevTime = time;
+					requestAnimationFrame(frame);
+				};
+				window.start_game = function() {
+					$("#lobby").hide();
+					$("#board").show();
+					time = 0;
+					socket.on("game/init", function(data) {
+						console.log(data);
+						gid = data["gid"];
+						if (data["player1"] == username) player = "player1";
+						else if (data["player2"] == username) player = "player2";
+						game = new Minsweeper(15, 15, 60, parseInt(data["gid"].toLowerCase(), 36));
+						var mines = game["mines"];
+						$("#mines, #opp_mines").html(mines);
+						$("#time, #opp_time").html(0);
+						startTime = data["start_time"];
+						set_board(game.getBoard());
+						requestAnimationFrame(frame);
+					});
+					socket.on("game/update", function(data) {
+						var opp = player == "player1" ? "player2" : "player1";
+						$("#opp_mines").html(data[opp]["mines"]);
+						$("#opp_time").html(data[opp]["time"]);
+					});
+				};
+			});
+		</script>
+	</body>
 </html>

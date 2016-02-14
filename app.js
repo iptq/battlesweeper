@@ -3,11 +3,14 @@ var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 var util = require("./util");
+var Minsweeper = require("./public/Minsweeper");
 var _ = require("lodash");
+var moment = require("moment");
 
 app.use(express.static("public"));
 
 var users = [];
+var games = [];
 
 var get_users = function() {
 	return users;
@@ -31,6 +34,7 @@ io.on("connection", function(socket) {
 		"username": username,
 		"in_game": false,
 		"open_challenge": false,
+		"socket_id": socket.id
 	});
 	socket.on("lobby/join", function(data, callback) {
 		callback(null, username);
@@ -46,13 +50,46 @@ io.on("connection", function(socket) {
 	socket.on("lobby/accept", function(data, callback) {
 		var index = _.findIndex(users, { "username": username });
 		var senderIndex = _.findIndex(users, { "username": data["sender"] });
+		var gid = util.token();
+		var obj = {
+			"gid": gid,
+			"start_time": ~~(moment().add(5, "seconds").format("X")),
+			"player1": username,
+			"player2": data["sender"],
+			"player1data": {},
+			"player2data": {}
+		};
+		games.push(obj);
 		users[index]["open_challenge"] = false;
 		users[senderIndex]["open_challenge"] = false;
 		users[index]["in_game"] = true;
 		users[senderIndex]["in_game"] = true;
+		users[index]["gid"] = gid;
+		users[senderIndex]["gid"] = gid;
+		io.sockets.connected[users[index]["socket_id"]].join(gid);
+		io.sockets.connected[users[senderIndex]["socket_id"]].join(gid);
 		io.emit("lobby/users", get_users());
 		io.emit("lobby/challenges", get_challenges());
+		io.to(gid).emit("game/init", obj);
 		callback();
+	});
+	socket.on("game/update", function(data) {
+		var from = data["from"];
+		var query = {};
+		query[data["player"]] = from;
+		var gameIndex = _.findIndex(games, query);
+		games[gameIndex][data["player"] + "data"] = { mines: data["mines"], time: data["time"] };
+		var obj2 = {
+			player1: {
+				mines: games[gameIndex]["player1data"]["mines"] || 0,
+				time: ~~(moment().format("X")) - games[gameIndex]["start_time"]
+			},
+			player2: {
+				mines: games[gameIndex]["player2data"]["mines"] || 0,
+				time: ~~(moment().format("X")) - games[gameIndex]["start_time"]
+			}
+		};
+		io.to(data["gid"]).emit("game/update", obj2);
 	});
 	socket.on("disconnect", function() {
 		_.pullAllBy(users, [{ "username": username }], "username");
@@ -60,7 +97,7 @@ io.on("connection", function(socket) {
 	});
 });
 
-var host = "127.0.0.1";
+var host = "0.0.0.0";
 var port = 80;
 server.listen(port, host, function() {
 	console.log("Listening on port " + port + "...");
