@@ -46,7 +46,7 @@ io.on("connection", function(socket) {
 		callback();
 	});
 	socket.on("lobby/join", function(data, callback) {
-		callback(null, username);
+		callback(null, { username: username, time: ~~(moment().format("X")) });
 		io.emit("lobby/users", get_users());
 		io.emit("lobby/challenges", get_challenges());
 	});

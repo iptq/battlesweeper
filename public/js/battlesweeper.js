@@ -2,8 +2,15 @@ var socket = io();
 var username, player, gid;
 var time, startTime, prevTime = 0, mines;
 var game;
+var mode = 0; // 1 = quick flagging
+var timeOffset = 0;
+var auth = {
+	logged_in: false
+};
 socket.emit("lobby/join", {}, function(error, message) {
-	username = message;
+	username = message["username"];
+	timeOffset = message["time"] - ~~(new Date().getTime() / 1000);
+	console.log(timeOffset);
 	socket.on("lobby/users", function(users) {
 		var userlist = document.getElementById("users");
 		userlist.innerHTML = "";
@@ -208,7 +215,7 @@ socket.emit("lobby/join", {}, function(error, message) {
 			var mines = game["mines"];
 			$("#mines, #opp_mines").html(mines);
 			$("#time, #opp_time").html(0);
-			startTime = data["start_time"];
+			startTime = data["start_time"] - timeOffset;
 			set_board(game.getBoard());
 			requestAnimationFrame(frame);
 		});
