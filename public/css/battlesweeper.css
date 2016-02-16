@@ -72,7 +72,7 @@ body, html {
 	height: 100%;
 }
 #lobby #userpanel {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	width: 25%;
@@ -127,14 +127,14 @@ body, html {
 	background-color: #080;
 }
 #lobby #chatpanel {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	right: 0;
 	width: 75%;
 	height: 100%;
 }
 #lobby #chatpanel #chatmessages {
-	height: calc(100% - 80px);
+	height: calc(100% - 160px);
 	overflow-y: scroll;
 	background-color: #F8F8F8;
 	box-sizing: border-box;
@@ -150,6 +150,16 @@ body, html {
 	width: 100%;
 	padding: 30px;
 	font-size: 16pt;
+}
+#lobby #chatpanel #userinfopanel {
+	height: 80px;
+	width: 100%;
+	padding: 30px;
+	box-sizing: border-box;
+	font-size: 14pt;
+	line-height: 20px;
+	background-color: #F1F1F1;
+	text-align: right;
 }
 #lobby #chatpanel #message:focus {
 	background-color: #FFF;
