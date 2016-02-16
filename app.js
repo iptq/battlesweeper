@@ -3,6 +3,7 @@ var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 var util = require("./util");
+var mongodb = require("mongodb");
 var Minsweeper = require("./public/Minsweeper");
 var _ = require("lodash");
 var moment = require("moment");
@@ -11,6 +12,7 @@ app.use(express.static("public"));
 
 var users = [];
 var games = [];
+var db;
 
 var get_users = function() {
 	return users;
@@ -123,8 +125,17 @@ io.on("connection", function(socket) {
 	});
 });
 
-var host = process.env.HOST || "0.0.0.0";
-var port = ~~(process.env.PORT) || 80;
-server.listen(port, host, function() {
-	console.log("Listening on port " + port + "...");
+mongodb.MongoClient.connect(process.env.MONGOLAB_URI, function(err, database) {
+	if (err) {
+		console.error(err);
+		process.exit(1);
+	}
+	db = database;
+	console.log("Connected to MongoLab.");
+
+	var host = process.env.HOST || "0.0.0.0";
+	var port = ~~(process.env.PORT) || 80;
+	server.listen(port, host, function() {
+		console.log("Listening on port " + port + "...");
+	});
 });

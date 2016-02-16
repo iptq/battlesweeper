@@ -1,0 +1,192 @@
+@font-face {
+	font-family: "Proxima Nova";
+	src: url("/fonts/ProximaNova.woff2");
+}
+@font-face {
+	font-family: "Proxima Nova";
+	src: url("/fonts/ProximaNovaBold.woff2");
+	font-weight: bold;
+}
+*::selection {
+	background-color: #7B1AF3;
+	color: #FFF;
+}
+body, html {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	font-family: "Proxima Nova";
+	font-weight: normal;
+}
+.cell {
+	display: inline-block;
+	width: 32px;
+	height: 32px;
+	line-height: 32px;
+	text-align: center;
+	border-top: 1px solid #999;
+	border-right: 1px solid #999;
+	text-decoration: none;
+	font-family: monospace;
+	font-size: 16pt;
+	background-color: #AAA;
+}
+.flag {
+	color: #900;
+}
+.covered {
+	background-color: #CCC !important;
+}
+.blank {
+	background-color: #999;
+}
+.number {
+	font-weight: bold;
+}
+.num1 {
+	color: #009;
+}
+.num2 {
+	color: #090;
+}
+.num3 {
+	color: #900;
+}
+.num4 {
+	color: #003;
+}
+.num5 {
+	color: #300;
+}
+.num6 {
+	color: #066;
+}
+.num7 {
+	color: #000;
+}
+.num8 {
+	color: #999;
+}
+#lobby {
+	background-color: #F8F8F8;
+	height: 100%;
+}
+#lobby #userpanel {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 25%;
+	height: 100%;
+	padding: 0;
+	background-color: #F0F0F0;
+}
+#lobby #userpanel #logo {
+	padding: 20px;
+	box-sizing: border-box;
+	width: 100%;
+	text-align: center;
+	height: 120px;
+	line-height: 80px;
+	background-color: #FFFFFF;
+	vertical-align: middle;
+	margin: 0;
+}
+#lobby #userpanel h2 {
+	padding: 20px;
+	box-sizing: border-box;
+	width: 100%;
+	background-color: #F6F6F6;
+	margin: 0;
+}
+#usercount {
+	padding: 5px;
+	box-sizing: border-box;
+	font-size: 0.75em;
+	font-weight: normal;
+	display: inline-block;
+	float: right;
+}
+#challenge_button {
+	display: inline-block;
+	float: right;
+	color: #FFF;
+	font-size: 0.65em;
+	padding: 5px;
+	text-decoration: none;
+	background-color: #090;
+	transition: all .2s ease-out;
+	-o-transition: all .2s ease-out;
+	-ms-transition: all .2s ease-out;
+	-moz-transition: all .2s ease-out;
+	-webkit-transition: all .2s ease-out;
+}
+#challenge_button:hover {
+	background-color: #0A0;
+}
+#challenge_button:active {
+	background-color: #080;
+}
+#lobby #chatpanel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 75%;
+	height: 100%;
+}
+#lobby #chatpanel #chatmessages {
+	height: calc(100% - 80px);
+	overflow-y: scroll;
+	background-color: #F8F8F8;
+	box-sizing: border-box;
+	padding: 20px;
+}
+#lobby #chatpanel #message {
+	font-family: "Proxima Nova";
+	height: 80px;
+	background-color: #F1F1F1;
+	border: none;
+	border-top: 1px solid #999;
+	outline: none;
+	width: 100%;
+	padding: 30px;
+	font-size: 16pt;
+}
+#lobby #chatpanel #message:focus {
+	background-color: #FFF;
+	transition: all .2s ease-out;
+	-o-transition: all .2s ease-out;
+	-ms-transition: all .2s ease-out;
+	-moz-transition: all .2s ease-out;
+	-webkit-transition: all .2s ease-out;
+}
+#board {
+	padding: 30px;
+}
+#overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1000;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+#overlay #countdown {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	width: 100%;
+	text-align: center;
+	color: #FFF;
+	font-weight: bold;
+	font-size: 3em;
+	transform: translateY(-50%);
+}
+#messagelist th, #messagelist td {
+	font-size: 1.25em;
+	padding: 10px;
+}
+td.timestamp {
+	font-style: italic;
+	color: #666;
+}
