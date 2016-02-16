@@ -123,8 +123,8 @@ io.on("connection", function(socket) {
 	});
 });
 
-var host = "0.0.0.0";
-var port = 80;
+var host = process.env.HOST || "0.0.0.0";
+var port = ~~(process.env.PORT) || 80;
 server.listen(port, host, function() {
 	console.log("Listening on port " + port + "...");
 });
