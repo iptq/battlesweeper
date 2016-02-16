@@ -7,6 +7,7 @@ var timeOffset = 0;
 var auth = {
 	logged_in: false
 };
+$.event.special.tap.tapholdThreshold = 120;
 socket.emit("lobby/join", {}, function(error, message) {
 	username = message["username"];
 	timeOffset = message["time"] - ~~(new Date().getTime() / 1000);
@@ -114,7 +115,7 @@ socket.emit("lobby/join", {}, function(error, message) {
 				var k = j*height + i;
 				html += "<td>";
 				var X = toHtml(board[k]);
-				html += "<a class='" + X[0] + "' href='javascript:click_square(" + k + ");' id='cell" + k + "'>" + X[1] + "</a>";
+				html += "<a class='" + X[0] + "' id='cell" + k + "'>" + X[1] + "</a>";
 				html += "</td>";
 			}
 			html += "</tr>";
@@ -125,7 +126,7 @@ socket.emit("lobby/join", {}, function(error, message) {
 			for(var i=0; i<width; i++) {
 				var k = j*height + i;
 				(function(i, j, k) {
-					document.getElementById("cell" + k).oncontextmenu = function(e) {
+					var flag_func = function(e) {
 						e.preventDefault();
 						console.log(i + ", " + j);
 						if (time >= 0) {
@@ -135,7 +136,12 @@ socket.emit("lobby/join", {}, function(error, message) {
 							flag_square(k);
 						}
 						return false;
-					}
+					};
+					document.getElementById("cell" + k).oncontextmenu = flag_func;
+					$("#cell" + k).taphold(flag_func);
+					$("#cell" + k).tap(function(e) {
+						click_square(k);
+					});
 				})(i, j, k);
 			}
 		}

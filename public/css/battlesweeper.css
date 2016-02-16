@@ -171,6 +171,7 @@ body, html {
 }
 #board {
 	padding: 30px;
+	height: 100%;
 }
 #overlay {
 	position: absolute;
