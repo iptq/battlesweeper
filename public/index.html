@@ -5,6 +5,7 @@
 		<script src="https://cdn.socket.io/socket.io-1.4.5.js" integrity="sha384-mp5QqlF7YJplkggFgto52+zx2bKkCQPFNvJWia1rhnEpwcXieUOcgRoLncV3M4NO" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js" integrity="sha384-uEKJZcjXxYuCnOPvqTQP6vj69jWPkWzo0YISzCKa0UKHGJp7QpcphU3tW4Whc/bZ" crossorigin="anonymous"></script>
 		<script src="Minsweeper.js"></script>
+		<link rel="icon" href="img/logo.png" />
 		<style>
 			@font-face {
 				font-family: "Proxima Nova";
@@ -293,12 +294,16 @@
 				socket.on("lobby/message", function(data) {
 					var row = document.createElement("tr");
 					var col0 = document.createElement("td");
-					col0.innerHTML = moment(data["timestamp"], "x").add(moment().utcOffset(), "minutes").format("LT");
+					col0.innerHTML = moment(data["timestamp"] + 2705000 /*hack*/, "x").add(moment().utcOffset(), "minutes").format("LT");
 					col0.className = "timestamp";
+					col0.style.minWidth = "90px";
+					col0.style.textAlign = "right";
 					var col1 = document.createElement("th");
 					col1.innerHTML = data["sender"];
 					var col2 = document.createElement("td");
 					col2.innerHTML = data["message"];
+					col2.style.overflowX = "hidden";
+					col2.style.whiteSpace = "nowrap";
 					row.appendChild(col0);
 					row.appendChild(col1);
 					row.appendChild(col2);
@@ -420,6 +425,8 @@
 					$("#time").html(time);
 					if (time < 0) {
 						$("#countdown").html(-1 * time);
+					} else {
+						$("#overlay").hide();
 					}
 					if (time != prevTime) {
 						if (time == 0) $("#overlay").hide();
@@ -444,8 +451,7 @@
 						gid = data["gid"];
 						if (data["player1"] == username) player = "player1";
 						else if (data["player2"] == username) player = "player2";
-						console.log(parseInt(data["gid"].toLowerCase(), 36) % 15700);
-						game = new Minsweeper(15, 15, 20, parseInt(data["gid"].toLowerCase(), 36));
+						game = new Minsweeper(15, 15, 20, { }, parseInt(data["gid"].toLowerCase(), 36) % 15700);
 						var mines = game["mines"];
 						$("#mines, #opp_mines").html(mines);
 						$("#time, #opp_time").html(0);
