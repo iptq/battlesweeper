@@ -27,7 +27,7 @@
 			</div>
 			<div id="chatpanel">
 				<div id="userinfopanel">
-					Not Logged In. <a href="javascript:login();">Login</a> or <a href="javascript:register();">Register</a>
+					<a href="javascript:toggle_quickflag();" style="text-decoration:none;"><span class="quickflag_status"></span></a>
 				</div>
 				<div id="chatmessages">
 					<table id="messagelist"></table>
@@ -38,19 +38,23 @@
 			</div>
 		</div>
 		<div id="board" style="display:none;">
-			<h2>Play</h2>
-			<div id="toolbar">
-				Mines: <span id="mines"></span>
-				Time: <span id="time"></span>
-				<div style="float:right;">
-					(Opponent)
-					Mines: <span id="opp_mines"></span>
-					Time: <span id="opp_time"></span>
+			<div id="panelthing">
+				<div id="toolbar">
+					<div style="float:left;">
+						Mines: <span id="mines"></span><br />
+						Time: <span id="time"></span>
+					</div>
+					<div style="float:right;text-align:right;">
+						(Opponent)
+						Mines: <span id="opp_mines"></span><br />
+						Time: <span id="opp_time"></span>
+					</div>
+				</div>
+				<div id="actual_board" style="display:inline-block;"></div>
+				<div id="toolbar2">
+					<a href="javascript:toggle_quickflag();" style="text-decoration:none;"><span class="quickflag_status"></span></a>
 				</div>
 			</div>
-			<center>
-				<div id="actual_board" style="display:inline-block;"></div>
-			</center>
 		</div>
 		<div id="overlay" style="display:none;">
 			<div id="countdown">COUNTDOWN</div>

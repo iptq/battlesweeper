@@ -180,29 +180,76 @@ Minsweeper.Board = function(width, height, mines, seed) {
     this.status = [];
     // 0-8 = number, -1 = unknown, -2 = flagged, 9 = mine
     this.visible = [];
+    var m = new MersenneTwister(seed);
+    
+    var mineCoords = [ ];
+    var centerCoords = [ ];
+    var centerx = Math.floor(width/2);
+    var centery = Math.floor(height/2);
+    for(var i=centerx-1; i<=centerx+1; i++) {
+        for(var j=centery-1; j<=centery+1; j++) {
+            var k = j * width + i;
+            centerCoords.push(k);
+        }
+    }
+    // console.log(centerCoords);
+    for(var i=0; i<mines; i++) {
+        var r;
+        do {
+            r = ~~(m.random() * width * height);
+        } while (mineCoords.indexOf(r) != -1 || centerCoords.indexOf(r) != -1);
+        mineCoords.push(r);
+    }
+    // console.log(mineCoords);
     
     // Populate mines and squares
-    for (var i = 0; i < width * height && i < mines; i++) {
-        this.grid.push(-1);
-        this.status.push(0);
-        this.visible.push(-1);
-    }
-    for (var i = mines; i < width * height; i++) {
+    for (var i = 0; i < width * height; i++) {
         this.grid.push(0);
         this.status.push(0);
         this.visible.push(-1);
+    }
+    for (var i = 0; i < mineCoords.length; i++) {
+        var r = mineCoords[i];
+        this.grid[r] = -1;
+        this.status[r] = 0;
+        this.visible[r] = -1;
     }
     
     var instance = this;
     
     // Fisher-Yates shuffle
-    var m = new MersenneTwister(seed);
-    for (var i = width * height - 1; i >= 1; i--) {
+    /* for (var i = width * height - 1; i >= 1; i--) {
         var r = ~~(m.random() * (i + 1));
         var t = this.grid[i];
         this.grid[i] = this.grid[r];
         this.grid[r] = t;
+    } */
+    
+    /*
+    // Get rid of mines in center 9 squares
+    var centerx = Math.floor(width/2);
+    var centery = Math.floor(height/2);
+    // index= y*width+x ... right???
+    // should be y * height + x i think
+    // shouldn't it be y * the maximum x index
+    // i'll try it my way first and see what works
+    
+    // really bad code follows
+    for (var xx = centerx-1; xx <= centerx+1; xx++){
+        for (var yy=centery-1; yy <= centery+1; yy++){
+            if (this.grid[yy * width + xx] == -1){
+                // move it randomly?
+                this.grid[yy * this.width + xx] = 0;
+                var r = ~~(m.random() * (width * height));
+                while (this.grid[r] != 0 || (Math.abs(r % width - centerx) <= 1 || Math.abs(~~(r / width) - centery) <= 1)) {
+                    var r = ~~(m.random() * (width * height));
+                }
+                this.grid[r] = -1;
+            }
+        }
     }
+    */
+    
     
     // Compute numbers
     for (var r = 0; r < height; r++) {
@@ -224,6 +271,7 @@ Minsweeper.Board = function(width, height, mines, seed) {
             }
         }
     }
+    
 }
 
 Minsweeper.Board.prototype.constructor = Minsweeper.Board;
@@ -343,7 +391,7 @@ Minsweeper.Board.prototype.open = function(r, c) {
                     var nr = coords[0] + coord[0];
                     var nc = coords[1] + coord[1];
                     var no = instance.c2o(nr, nc);
-                    console.log(instance.grid[no]);
+                    // console.log(instance.grid[no]);
                     if (instance.inBounds(nr, nc) && instance.grid[no] >= 0 && instance.grid[no] <= 8) {
                         openstack.push([ nr, nc ]);
                     }

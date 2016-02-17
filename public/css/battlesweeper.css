@@ -30,6 +30,8 @@ body, html {
 	font-family: monospace;
 	font-size: 16pt;
 	background-color: #AAA;
+	cursor: pointer;
+	user-select: none;
 }
 .flag {
 	color: #900;
@@ -39,6 +41,10 @@ body, html {
 }
 .blank {
 	background-color: #999;
+}
+.centercell {
+	border: 1px solid #F00;
+	box-sizing: border-box;
 }
 .number {
 	font-weight: bold;
@@ -172,6 +178,15 @@ body, html {
 #board {
 	padding: 30px;
 	height: 100%;
+}
+#panelthing {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translateX(-50%) translateY(-50%);
+}
+#toolbar2 {
+	font-size: 0.75em;
 }
 #overlay {
 	position: absolute;
